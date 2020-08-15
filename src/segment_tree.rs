@@ -1,27 +1,32 @@
 use std::ops::Add;
 
+type Binop<T> = fn(T, T) -> T;
+
 pub struct SegmentTree<T> {
     data: Vec<T>,
+    op: Binop<T>,
 }
 
 impl<T: Default + Add<Output = T> + Copy> SegmentTree<T> {
-    fn segmentify(data: &mut Vec<T>) {
-        for i in (1..=data.len() - 2).rev().step_by(2) {
+    fn segmentify(&mut self) {
+        for i in (1..=self.data.len() - 2).rev().step_by(2) {
             let parent_idx = i / 2;
-            data[parent_idx] = data[i] + data[i + 1];
+            self.data[parent_idx] = (self.op)(self.data[i], self.data[i + 1]);
         }
     }
 
-    pub fn new(mut data: Vec<T>) -> Self {
+    pub fn new(mut data: Vec<T>, op: Binop<T>) -> Self {
         let internal_len = data.len().checked_next_power_of_two().unwrap();
         data.resize_with(internal_len, Default::default);
         let mut internal_data = Vec::with_capacity(internal_len * 2 - 1);
         internal_data.resize_with(internal_len - 1, Default::default);
         internal_data.extend(data);
-        SegmentTree::segmentify(&mut internal_data);
-        SegmentTree {
+        let mut st = SegmentTree {
             data: internal_data,
-        }
+            op,
+        };
+        st.segmentify();
+        st
     }
 
     fn get_in_tree_idx(&self, idx: usize) -> usize {
@@ -32,7 +37,8 @@ impl<T: Default + Add<Output = T> + Copy> SegmentTree<T> {
         self.data[in_tree_idx] = val;
         while in_tree_idx > 0 {
             let parent_idx = (in_tree_idx - 1) / 2;
-            self.data[parent_idx] = self.data[parent_idx * 2 + 1] + self.data[parent_idx * 2 + 2];
+            self.data[parent_idx] =
+                (self.op)(self.data[parent_idx * 2 + 1], self.data[parent_idx * 2 + 2]);
             in_tree_idx = parent_idx;
         }
     }
@@ -43,8 +49,10 @@ impl<T: Default + Add<Output = T> + Copy> SegmentTree<T> {
             T::default()
         } else {
             let mid = (lx + rx) / 2;
-            self.range_sum_helper(2 * node_idx + 1, l, r, lx, mid)
-                + self.range_sum_helper(2 * node_idx + 2, l, r, mid, rx)
+            (self.op)(
+                self.range_sum_helper(2 * node_idx + 1, l, r, lx, mid),
+                self.range_sum_helper(2 * node_idx + 2, l, r, mid, rx),
+            )
         }
     }
     pub fn range_sum(&self, l: usize, r: usize) -> T {
@@ -66,7 +74,7 @@ mod tests {
     #[test]
     fn create_and_replace() {
         let v = vec![1, 2, 3, 4, 5, 6];
-        let mut st = SegmentTree::new(v);
+        let mut st = SegmentTree::new(v, |a, b| a + b);
         assert_eq!(
             st.data,
             vec![21, 10, 11, 3, 7, 11, 0, 1, 2, 3, 4, 5, 6, 0, 0]
