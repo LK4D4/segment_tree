@@ -1,10 +1,10 @@
-use std::{fmt::Display, ops::Add};
+use std::ops::Add;
 
 pub struct SegmentTree<T> {
     data: Vec<T>,
 }
 
-impl<T: Default + Add<Output = T> + Copy + Display> SegmentTree<T> {
+impl<T: Default + Add<Output = T> + Copy> SegmentTree<T> {
     fn segmentify(data: &mut Vec<T>) {
         for i in (1..=data.len() - 2).rev().step_by(2) {
             let parent_idx = i / 2;
