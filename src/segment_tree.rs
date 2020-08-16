@@ -42,7 +42,7 @@ impl<T: Default + Add<Output = T> + Copy> SegmentTree<T> {
             in_tree_idx = parent_idx;
         }
     }
-    fn range_sum_helper(&self, node_idx: usize, l: usize, r: usize, lx: usize, rx: usize) -> T {
+    fn range_op_helper(&self, node_idx: usize, l: usize, r: usize, lx: usize, rx: usize) -> T {
         if l <= lx && r >= rx {
             self.data[node_idx]
         } else if rx <= l || lx >= r {
@@ -50,43 +50,24 @@ impl<T: Default + Add<Output = T> + Copy> SegmentTree<T> {
         } else {
             let mid = (lx + rx) / 2;
             (self.op)(
-                self.range_sum_helper(2 * node_idx + 1, l, r, lx, mid),
-                self.range_sum_helper(2 * node_idx + 2, l, r, mid, rx),
+                self.range_op_helper(2 * node_idx + 1, l, r, lx, mid),
+                self.range_op_helper(2 * node_idx + 2, l, r, mid, rx),
             )
         }
     }
-    pub fn range_sum(&self, l: usize, r: usize) -> T {
+    pub fn range_op(&self, l: usize, r: usize) -> T {
         let r = if r > self.data.len() {
             self.data.len()
         } else {
             r
         };
         assert!(l != r);
-        self.range_sum_helper(
+        self.range_op_helper(
             0,
             self.get_in_tree_idx(l),
             self.get_in_tree_idx(r),
             self.data.len() / 2,
             self.data.len(),
         )
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn create_and_replace() {
-        let v = vec![1, 2, 3, 4, 5, 6];
-        let mut st = SegmentTree::new(v, |a, b| a + b);
-        assert_eq!(
-            st.data,
-            vec![21, 10, 11, 3, 7, 11, 0, 1, 2, 3, 4, 5, 6, 0, 0]
-        );
-        st.replace(3, 7); // 4 -> 7
-        assert_eq!(
-            st.data,
-            vec![24, 13, 11, 3, 10, 11, 0, 1, 2, 3, 7, 5, 6, 0, 0]
-        );
     }
 }
