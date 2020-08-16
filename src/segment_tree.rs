@@ -1,21 +1,13 @@
-use std::ops::Add;
-
 type Binop<T> = fn(T, T) -> T;
 
 pub struct SegmentTree<T> {
+    stub: T,
     data: Vec<T>,
     op: Binop<T>,
 }
 
-impl<T: Default + Add<Output = T> + Copy> SegmentTree<T> {
-    fn segmentify(&mut self) {
-        for i in (2..self.data.len()).rev().step_by(2) {
-            let parent_idx = (i - 1) / 2;
-            self.data[parent_idx] = (self.op)(self.data[i - 1], self.data[i]);
-        }
-    }
-
-    pub fn new(mut data: Vec<T>, op: Binop<T>) -> Self {
+impl<T: Default + Copy> SegmentTree<T> {
+    pub fn new(mut data: Vec<T>, op: Binop<T>, stub: T) -> Self {
         let internal_len = data.len().checked_next_power_of_two().unwrap();
         data.resize_with(internal_len, Default::default);
         let mut internal_data = Vec::with_capacity(internal_len * 2 - 1);
@@ -24,9 +16,17 @@ impl<T: Default + Add<Output = T> + Copy> SegmentTree<T> {
         let mut st = SegmentTree {
             data: internal_data,
             op,
+            stub,
         };
         st.segmentify();
         st
+    }
+
+    fn segmentify(&mut self) {
+        for i in (2..self.data.len()).rev().step_by(2) {
+            let parent_idx = (i - 1) / 2;
+            self.data[parent_idx] = (self.op)(self.data[i - 1], self.data[i]);
+        }
     }
 
     fn get_in_tree_idx(&self, idx: usize) -> usize {
@@ -46,7 +46,7 @@ impl<T: Default + Add<Output = T> + Copy> SegmentTree<T> {
         if l <= lx && r >= rx {
             self.data[node_idx]
         } else if rx <= l || lx >= r {
-            T::default()
+            self.stub
         } else {
             let mid = (lx + rx) / 2;
             (self.op)(

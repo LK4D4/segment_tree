@@ -5,7 +5,7 @@ pub fn modify(c: &mut Criterion) {
     let data: Vec<i32> = (1..1000).collect();
     c.bench_function("replace", move |b| {
         b.iter_batched(
-            || SegmentTree::new(data.clone(), |a, b| a + b),
+            || SegmentTree::new(data.clone(), |a, b| a + b, 0),
             |mut st| st.replace(1, 3),
             BatchSize::SmallInput,
         )
