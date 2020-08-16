@@ -9,9 +9,9 @@ pub struct SegmentTree<T> {
 
 impl<T: Default + Add<Output = T> + Copy> SegmentTree<T> {
     fn segmentify(&mut self) {
-        for i in (1..=self.data.len() - 2).rev().step_by(2) {
-            let parent_idx = i / 2;
-            self.data[parent_idx] = (self.op)(self.data[i], self.data[i + 1]);
+        for i in (2..self.data.len()).rev().step_by(2) {
+            let parent_idx = (i - 1) / 2;
+            self.data[parent_idx] = (self.op)(self.data[i - 1], self.data[i]);
         }
     }
 
@@ -56,7 +56,11 @@ impl<T: Default + Add<Output = T> + Copy> SegmentTree<T> {
         }
     }
     pub fn range_sum(&self, l: usize, r: usize) -> T {
-        assert!(r < self.data.len());
+        let r = if r > self.data.len() {
+            self.data.len()
+        } else {
+            r
+        };
         assert!(l != r);
         self.range_sum_helper(
             0,

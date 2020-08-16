@@ -22,4 +22,10 @@ mod tests {
         assert_eq!(st.range_sum(0, 2), 6, "[0, 2)");
         assert_eq!(st.range_sum(0, 3), 9, "[0, 3)");
     }
+
+    #[test]
+    fn single_node() {
+        let st = SegmentTree::new(vec![1], |a, b| a + b);
+        assert_eq!(st.range_sum(0, 2), 1, "[0, 2)");
+    }
 }
